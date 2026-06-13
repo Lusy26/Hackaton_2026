@@ -2,8 +2,8 @@ def printBoard(maze):
     for i in maze:
         for o in i:
             if o == -1:
-                #print("🟪", end=" ")
-                print("⬛", end=" ")
+                print("🟪", end=" ")
+                #print("⬛", end=" ")
             elif o==0:
                 print("⬜", end=" ")
             elif o==1:

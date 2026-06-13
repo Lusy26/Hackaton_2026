@@ -1,7 +1,7 @@
 from maze_generator import generator, randomGap
 from maze_printer import printBoard, updatePass
 from algorithm_A import maze_resolve_A
-n=18
+n=10
 maze=generator(n)
 maze=randomGap(maze,10,n)
 print(maze)
