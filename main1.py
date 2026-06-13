@@ -71,7 +71,7 @@ while running:
 
             # Mostrar solo un área 5x5 (25 bloques) alrededor del jugador;
             # lo demás se pinta en gris oscuro
-            radius = 2  # 2 en cada dirección -> 5x5 = 25 bloques
+            radius = 1  # 2 en cada dirección -> 5x5 = 25 bloques
             if abs(x - player.x) > radius or abs(y - player.y) > radius:
                 color = (80, 80, 80)
             else:

@@ -32,8 +32,7 @@ def aceptar():
     global conn
 
     conn, addr = server.accept()
-    chat.insert(tk.END, f"Cliente conectado: {addr}\n")
-
+    chat.insert(tk.END, f"Clie5
     while True:
         try:
             data = conn.recv(1024).decode()
