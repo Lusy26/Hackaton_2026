@@ -7,7 +7,7 @@ from game import Game
 
 
 
-n = 30
+n = 64
 maze = generator(n)
 maze = randomGap(maze, 10, n)
 
