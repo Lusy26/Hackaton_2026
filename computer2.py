@@ -14,24 +14,14 @@ main2_path = os.path.join(script_dir, "main2.py")
 HOSTS = ["10.10.11.204", "127.0.0.1", "localhost"]
 PORT = 12345
 
-client = socket.socket()
+client = None
 connected_ok = False
+HOST = None
 last_error = None
 child_process = None
 seed_proposal = None
 remote_seed_proposal = None
 agreed_seed = None
-for host in HOSTS:
-    try:
-        client.connect((host, PORT))
-        HOST = host
-        connected_ok = True
-        break
-    except Exception as e:
-        last_error = e
-
-if not connected_ok:
-    print(f"Error al conectar con {HOSTS}: {last_error}")
 
 # --------- VENTANA ---------
 ventana = tk.Tk()
@@ -39,6 +29,18 @@ ventana.title("Chat")
 
 chat = ScrolledText(ventana, width=50, height=20)
 chat.pack()
+
+server_frame = tk.Frame(ventana)
+server_frame.pack(pady=5)
+
+server_label = tk.Label(server_frame, text="IP ordenador 1:")
+server_label.pack(side=tk.LEFT)
+
+server_ip_entry = tk.Entry(server_frame, width=20)
+server_ip_entry.pack(side=tk.LEFT, padx=5)
+
+connect_button = tk.Button(server_frame, text="Conectar")
+connect_button.pack(side=tk.LEFT)
 
 entrada = tk.Entry(ventana, width=40)
 entrada.pack()
@@ -68,6 +70,35 @@ def show_local_ip():
         ventana.after(0, append_chat, f"IP local de este equipo: {ip_local}\n")
     else:
         ventana.after(0, append_chat, "No se pudo determinar la IP local. Usa 'ipconfig' en CMD para ver la IP de este ordenador.\n")
+
+
+def connect_to_server(event=None):
+    global client, connected_ok, HOST, last_error
+    if connected_ok:
+        return
+
+    host_input = server_ip_entry.get().strip()
+    hosts_to_try = [host_input] if host_input else HOSTS
+    last_error = None
+
+    for host in hosts_to_try:
+        try:
+            client = socket.socket()
+            client.connect((host, PORT))
+            HOST = host
+            connected_ok = True
+            ventana.after(0, append_chat, f"Conectado a servidor en {HOST}:{PORT}\n")
+            show_local_ip()
+            ventana.after(0, append_chat, "Use /seed <valor> para proponer seed, /agree para aceptar, o /start <valor> para iniciar.\n")
+            threading.Thread(target=recibir, daemon=True).start()
+            connect_button.config(state="disabled")
+            server_ip_entry.config(state="disabled")
+            return
+        except Exception as e:
+            last_error = e
+
+    ventana.after(0, append_chat, f"No se pudo conectar con {hosts_to_try}: {last_error}\n")
+    ventana.after(0, append_chat, "Introduce la IP del ordenador 1 y pulsa Conectar.\n")
 
 
 def process_command(message, source="local"):
@@ -152,13 +183,11 @@ def launch_game(seed):
         ventana.after(0, append_chat, "No se encontró main2.py\n")
 
 
-if connected_ok:
-    ventana.after(0, append_chat, f"Conectado a servidor en {HOST}:{PORT}\n")
-    show_local_ip()
-    ventana.after(0, append_chat, "Use /seed <valor> para proponer seed, /agree para aceptar, o /start <valor> para iniciar.\n")
-    threading.Thread(target=recibir, daemon=True).start()
-else:
-    ventana.after(0, append_chat, f"No se pudo conectar con el servidor {HOSTS}: {last_error}\n")
+connect_button.config(command=connect_to_server)
+server_ip_entry.bind("<Return>", connect_to_server)
+
+# Intento de conexión automática con hosts conocidos
+connect_to_server()
 
 # --------- ENVIAR MENSAJES ---------
 def enviar(event=None):
