@@ -39,13 +39,19 @@ def append_chat(text):
 def aceptar():
     global conn
 
-    conn, addr = server.accept()
-    ventana.after(0, append_chat, f"Cliente conectado: {addr}\n")
+    ventana.after(0, append_chat, "Esperando cliente en {}:{}...\n".format(HOST, PORT))
+    try:
+        conn, addr = server.accept()
+        ventana.after(0, append_chat, f"Cliente conectado: {addr}\n")
+    except Exception as e:
+        ventana.after(0, append_chat, f"Error al aceptar conexión: {e}\n")
+        return
 
     while True:
         try:
             data = conn.recv(1024)
             if not data:
+                ventana.after(0, append_chat, "Conexión cerrada por el cliente\n")
                 break
 
             mensaje = data.decode()

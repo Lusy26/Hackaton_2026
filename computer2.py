@@ -16,11 +16,23 @@ except Exception as e:
     print(f"Error al ejecutar main2.py: {e}")
 
 # --------- SOCKET ---------
-HOST = "10.10.11.204"
+HOSTS = ["10.10.11.204", "127.0.0.1", "localhost"]
 PORT = 12345
 
 client = socket.socket()
-client.connect((HOST, PORT))
+connected_ok = False
+last_error = None
+for host in HOSTS:
+    try:
+        client.connect((host, PORT))
+        HOST = host
+        connected_ok = True
+        break
+    except Exception as e:
+        last_error = e
+
+if not connected_ok:
+    print(f"Error al conectar con {HOSTS}: {last_error}")
 
 # --------- VENTANA ---------
 ventana = tk.Tk()
@@ -52,12 +64,24 @@ def recibir():
             ventana.after(0, append_chat, f"Error al recibir: {e}\n")
             break
 
-threading.Thread(target=recibir, daemon=True).start()
+if connected_ok:
+    ventana.after(0, append_chat, f"Conectado a servidor en {HOST}:{PORT}\n")
+    threading.Thread(target=recibir, daemon=True).start()
+else:
+    ventana.after(0, append_chat, f"No se pudo conectar con el servidor {HOSTS}: {last_error}\n")
 
 # --------- ENVIAR MENSAJES ---------
 def enviar(event=None):
+    if not connected_ok:
+        chat.insert(tk.END, "No hay conexión al servidor\n")
+        return
+
     msg = entrada.get()
-    client.send(msg.encode())
+    try:
+        client.send(msg.encode())
+    except Exception as e:
+        chat.insert(tk.END, f"Error al enviar: {e}\n")
+        return
 
     chat.insert(tk.END, "Tú: " + msg + "\n")
     entrada.delete(0, tk.END)
