@@ -4,7 +4,7 @@ from tkinter.scrolledtext import ScrolledText
 import threading
 
 # --------- SOCKET ---------
-HOST = "IP_DEL_SERVIDOR"
+HOST = "10.10.11.204"
 PORT = 12345
 
 client = socket.socket()
