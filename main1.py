@@ -91,11 +91,10 @@ while running:
 
 
     # PLAYER
-    pygame.draw.circle(
+    pygame.draw.rect(
         screen,
         (0, 100, 255),
-        (CELL_SIZE + CELL_SIZE // 2, CELL_SIZE + CELL_SIZE // 2),
-        CELL_SIZE // 2
+        (player.x * CELL_SIZE, player.y * CELL_SIZE, CELL_SIZE, CELL_SIZE)
     )
     
     pygame.display.flip()
