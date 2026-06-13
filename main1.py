@@ -5,7 +5,7 @@ from maze_charactermov import Player
 from game import Game
 
 
-n = 10
+n = 30
 maze = generator(n)
 maze = randomGap(maze, 10, n)
 
