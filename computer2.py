@@ -1,6 +1,6 @@
 import socket
 
-HOST = "82.159.176.57"
+HOST = "10.10.11.204"
 PORT = 12345
 
 client = socket.socket()
