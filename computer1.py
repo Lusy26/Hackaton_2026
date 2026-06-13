@@ -19,6 +19,9 @@ server.listen(1)
 conn = None
 child_process = None
 message_queue = queue.Queue()
+seed_proposal = None
+remote_seed_proposal = None
+agreed_seed = None
 script_dir = os.path.dirname(os.path.abspath(__file__))
 main_path = os.path.join(script_dir, "main.py")
 if not os.path.exists(main_path):
@@ -40,6 +43,27 @@ def append_chat(text):
     chat.see(tk.END)
 
 
+def get_local_ip():
+    try:
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        s.connect(("8.8.8.8", 80))
+        ip = s.getsockname()[0]
+        s.close()
+        if ip.startswith("127."):
+            return None
+        return ip
+    except Exception:
+        return None
+
+
+def show_local_ip():
+    ip_local = get_local_ip()
+    if ip_local:
+        ventana.after(0, append_chat, f"IP local de este equipo: {ip_local}\n")
+    else:
+        ventana.after(0, append_chat, "No se pudo determinar la IP local. Usa 'ipconfig' en CMD para ver la IP de este ordenador.\n")
+
+
 def launch_game(seed):
     global child_process
     if child_process and child_process.poll() is None:
@@ -56,37 +80,65 @@ def launch_game(seed):
         ventana.after(0, append_chat, "No se encontró main.py ni main1.py\n")
 
 
-def ask_seed_for_game():
-    seed_win = tk.Toplevel(ventana)
-    seed_win.title("Seed para laberinto")
+def process_command(message, source="local"):
+    global seed_proposal, remote_seed_proposal, agreed_seed
 
-    tk.Label(seed_win, text="Ingrese seed:").pack(padx=10, pady=5)
-    seed_entry = tk.Entry(seed_win)
-    seed_entry.pack(padx=10, pady=5)
-    seed_entry.focus_set()
+    if message.startswith("/seed "):
+        seed_value = message.split(" ", 1)[1].strip()
+        if source == "local":
+            seed_proposal = seed_value
+            ventana.after(0, append_chat, f"Seed propuesto: {seed_value}\n")
+        else:
+            remote_seed_proposal = seed_value
+            ventana.after(0, append_chat, f"Seed propuesto por cliente: {seed_value}\n")
+        return True
 
-    def on_ok(event=None):
-        seed_value = seed_entry.get().strip()
-        if seed_value == "":
-            seed_value = "0"
-        seed_win.destroy()
+    if message == "/agree":
+        if source == "local":
+            if remote_seed_proposal:
+                agreed_seed = remote_seed_proposal
+            elif seed_proposal:
+                agreed_seed = seed_proposal
+            else:
+                ventana.after(0, append_chat, "No hay seed propuesta para aceptar.\n")
+                return True
+            try:
+                conn.send(f"/start {agreed_seed}".encode())
+            except Exception:
+                pass
+            launch_game(agreed_seed)
+            return True
+        else:
+            if seed_proposal:
+                agreed_seed = seed_proposal
+            elif remote_seed_proposal:
+                agreed_seed = remote_seed_proposal
+            else:
+                ventana.after(0, append_chat, "El cliente aceptó sin propuesta disponible.\n")
+                return True
+            launch_game(agreed_seed)
+            ventana.after(0, append_chat, f"Cliente aceptó seed {agreed_seed}. Iniciando...\n")
+            return True
+
+    if message.startswith("/start "):
+        seed_value = message.split(" ", 1)[1].strip()
+        agreed_seed = seed_value
         launch_game(seed_value)
+        ventana.after(0, append_chat, f"Juego iniciado por orden remota con seed: {seed_value}\n")
+        return True
 
-    tk.Button(seed_win, text="Iniciar juego", command=on_ok).pack(padx=10, pady=10)
-    seed_win.bind("<Return>", on_ok)
-    seed_win.transient(ventana)
-    seed_win.grab_set()
+    return False
 
 
 def aceptar():
     global conn
 
     ventana.after(0, append_chat, "Esperando cliente en {}:{}...\n".format(HOST, PORT))
+    show_local_ip()
     try:
         conn, addr = server.accept()
         ventana.after(0, append_chat, f"Cliente conectado: {addr}\n")
-        ventana.after(0, append_chat, "Ingrese el seed para generar el laberinto.\n")
-        ventana.after(0, ask_seed_for_game)
+        ventana.after(0, append_chat, "Use /seed <valor> para proponer seed, /agree para aceptar, o /start <valor> para iniciar.\n")
     except Exception as e:
         ventana.after(0, append_chat, f"Error al aceptar conexión: {e}\n")
         return
@@ -99,7 +151,8 @@ def aceptar():
                 break
 
             mensaje = data.decode()
-            ventana.after(0, append_chat, "Cliente: " + mensaje + "\n")
+            if not process_command(mensaje, source="remote"):
+                ventana.after(0, append_chat, "Cliente: " + mensaje + "\n")
         except Exception as e:
             ventana.after(0, append_chat, f"Error al recibir: {e}\n")
             break
@@ -120,7 +173,8 @@ def enviar(event=None):
         ventana.after(0, append_chat, "No hay conexión activa\n")
         return
 
-    ventana.after(0, append_chat, "Tú: " + msg + "\n")
+    if not process_command(msg, source="local"):
+        ventana.after(0, append_chat, "Tú: " + msg + "\n")
     entrada.delete(0, tk.END)
 
 entrada.bind("<Return>", enviar)
