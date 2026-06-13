@@ -10,6 +10,10 @@ n = 10
 maze = generator(n)
 maze = randomGap(maze, 10, n)
 
+from maze_generator import addDecorations
+
+maze = addDecorations(maze, 8)
+
 ROWS = len(maze)
 COLS = len(maze[0])
 
@@ -65,7 +69,23 @@ while running:
 
     for y in range(ROWS):
         for x in range(COLS):
-            color = (255, 255, 255) if maze[y][x] == 0 else (40, 40, 40)
+            if maze[y][x] == 0:
+                color = (255, 255, 255)
+
+            elif maze[y][x] == 1:
+                 color = (40, 40, 40)
+
+            elif maze[y][x] == 10:
+                 color = (120, 200, 120)
+
+            elif maze[y][x] == 11:
+                color = (0, 200, 255)
+
+            elif maze[y][x] == 12:
+                color = (120, 120, 120)
+
+            elif maze[y][x] == 13:
+                color = (255, 150, 200)
 
             pygame.draw.rect(
                 screen,

@@ -1,6 +1,6 @@
 import socket
 
-HOST = "IP_DEL_SERVIDOR"
+HOST = "82.159.176.57"
 PORT = 12345
 
 client = socket.socket()
