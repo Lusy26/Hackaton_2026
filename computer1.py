@@ -64,15 +64,15 @@ boton.pack()
 # --------- EJECUTAR main.py ---------
 if __name__ == "__main__":
     script_dir = os.path.dirname(os.path.abspath(__file__))
-    main_path = os.path.join(script_dir, "main.py")
+    main_path = os.path.join(script_dir, "main1.py")
 
     if os.path.exists(main_path):
         try:
             child_process = subprocess.Popen([sys.executable, main_path], cwd=script_dir)
         except Exception as e:
-            chat.insert(tk.END, f"Error al ejecutar main.py: {e}\n")
+            chat.insert(tk.END, f"Error al ejecutar main1.py: {e}\n")
     else:
-        chat.insert(tk.END, "No se encontró main.py\n")
+        chat.insert(tk.END, "No se encontró main1.py\n")
 
     def on_close():
         global child_process

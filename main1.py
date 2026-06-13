@@ -5,19 +5,9 @@ from maze_charactermov import Player
 from game import Game
 
 
-
-
 n = 10
 maze = generator(n)
 maze = randomGap(maze, 10, n)
-<<<<<<< HEAD
-#from maze_generator import addDecorations
-
-#maze = addDecorations(maze, 8)
-=======
-maze = addDecorations(maze, 8)
->>>>>>> c23ef18c6555f7f4a5008923df0a663e6d49fcb5
-
 
 ROWS = len(maze)
 COLS = len(maze[0])
@@ -28,14 +18,10 @@ WIDTH = COLS * CELL_SIZE
 HEIGHT = ROWS * CELL_SIZE
 
 
-
-
 player = Player()
 goal = (COLS - 2, ROWS - 1)
 
 game = Game(maze, player, goal)
-
-
 
 
 pygame.init()
@@ -43,8 +29,6 @@ screen = pygame.display.set_mode((WIDTH, HEIGHT))
 clock = pygame.time.Clock()
 
 running = True
-
-
 
 
 while running:
@@ -74,10 +58,8 @@ while running:
 
 
 
-
     if player.x == goal[0] and player.y == goal[1]:
         pygame.display.set_caption("¡HAS GANADO!")
-
 
 
     screen.fill((0, 0, 0))
@@ -87,33 +69,18 @@ while running:
 
             tile = maze[y][x]
 
-            if tile == 0:
-                color = (255, 255, 255)
-
-<<<<<<< HEAD
-            elif maze[y][x] == 1 or maze[y][x] == -1:
-                 color = (40, 40, 40)
-=======
-            elif tile == 1:
-                color = (40, 40, 40)
->>>>>>> c23ef18c6555f7f4a5008923df0a663e6d49fcb5
-
-            elif tile == 10:
-                color = (120, 200, 120)
-
-            elif tile == 11:
-                color = (0, 200, 255)
-
-            elif tile == 12:
-                color = (120, 120, 120)
-
-            elif tile == 13:
-                color = (255, 150, 200)
+            # Mostrar solo un área 5x5 (25 bloques) alrededor del jugador;
+            # lo demás se pinta en gris oscuro
+            radius = 2  # 2 en cada dirección -> 5x5 = 25 bloques
+            if abs(x - player.x) > radius or abs(y - player.y) > radius:
+                color = (80, 80, 80)
             else:
-                color = (255, 255, 0)
-
-            else:
-                color = (200, 200, 200)  # fallback seguro
+                if tile == 0:
+                    color = (255, 255, 255)
+                elif tile == 1 or tile == -1:
+                    color = (40, 40, 40)
+                else:
+                    color = (200, 200, 200)  # fallback seguro
 
             pygame.draw.rect(
                 screen,
@@ -122,29 +89,6 @@ while running:
             )
 
 
-    
-    for x, y in game.closed:
-        pygame.draw.rect(
-            screen,
-            (255, 80, 80),
-            (x * CELL_SIZE, y * CELL_SIZE, CELL_SIZE, CELL_SIZE)
-        )
-
-    
-    for x, y in game.path:
-        pygame.draw.rect(
-            screen,
-            (0, 255, 0),
-            (x * CELL_SIZE, y * CELL_SIZE, CELL_SIZE, CELL_SIZE)
-        )
-
-
-    
-    pygame.draw.rect(
-        screen,
-        (0, 255, 0),
-        (goal[0] * CELL_SIZE, goal[1] * CELL_SIZE, CELL_SIZE, CELL_SIZE)
-    )
 
     # PLAYER
     pygame.draw.rect(
@@ -152,7 +96,7 @@ while running:
         (0, 100, 255),
         (player.x * CELL_SIZE, player.y * CELL_SIZE, CELL_SIZE, CELL_SIZE)
     )
-
+    
     pygame.display.flip()
 
 pygame.quit()

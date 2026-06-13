@@ -1,7 +1,18 @@
+import os
 import socket
+import subprocess
+import sys
 import tkinter as tk
 from tkinter.scrolledtext import ScrolledText
 import threading
+
+# --------- INICIAR MAIN2 ---------
+script_dir = os.path.dirname(os.path.abspath(__file__))
+main2_path = os.path.join(script_dir, "main2.py")
+try:
+    subprocess.Popen([sys.executable, main2_path], cwd=script_dir)
+except Exception as e:
+    print(f"Error al ejecutar main2.py: {e}")
 
 # --------- SOCKET ---------
 HOST = "10.10.11.204"
