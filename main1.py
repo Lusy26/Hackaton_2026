@@ -1,14 +1,9 @@
 import pygame
-import sys
 
-from maze_generator import generator, randomGap, addDecorations, set_seed
+from maze_generator import generator, randomGap, addDecorations
 from maze_charactermov import Player
 from game import Game
 
-if len(sys.argv) > 1:
-    seed_value = sys.argv[1]
-    set_seed(seed_value)
-    print(f"Usando seed: {seed_value}")
 
 n = 30
 maze = generator(n)
@@ -17,21 +12,24 @@ maze = randomGap(maze, 10, n)
 ROWS = len(maze)
 COLS = len(maze[0])
 
-CELL_SIZE = 50
-VIEW_SIZE = 3
-WIDTH = VIEW_SIZE * CELL_SIZE
-HEIGHT = VIEW_SIZE * CELL_SIZE
+CELL_SIZE = 10
+
+WIDTH = COLS * CELL_SIZE
+HEIGHT = ROWS * CELL_SIZE
+
 
 player = Player()
 goal = (COLS - 2, ROWS - 1)
 
 game = Game(maze, player, goal)
 
+
 pygame.init()
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 clock = pygame.time.Clock()
 
 running = True
+
 
 while running:
     clock.tick(10)
@@ -40,10 +38,12 @@ while running:
         if event.type == pygame.QUIT:
             running = False
 
+        
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_r:
                 game.reset()
 
+            
             elif event.key == pygame.K_w:
                 player.move(0, -1, maze)
             elif event.key == pygame.K_s:
@@ -53,50 +53,51 @@ while running:
             elif event.key == pygame.K_d:
                 player.move(1, 0, maze)
 
+            
             game.recalculate()
+
+
 
     if player.x == goal[0] and player.y == goal[1]:
         pygame.display.set_caption("¡HAS GANADO!")
 
+
     screen.fill((0, 0, 0))
 
-    # Dibuja solo una vista 3x3 centrada en el jugador.
-    for view_y in range(VIEW_SIZE):
-        for view_x in range(VIEW_SIZE):
-            world_x = player.x + view_x - 1
-            world_y = player.y + view_y - 1
+    for y in range(ROWS):
+        for x in range(COLS):
 
-            if 0 <= world_x < COLS and 0 <= world_y < ROWS:
-                tile = maze[world_y][world_x]
+            tile = maze[y][x]
+
+            # Mostrar solo un área 5x5 (25 bloques) alrededor del jugador;
+            # lo demás se pinta en gris oscuro
+            radius = 2  # 2 en cada dirección -> 5x5 = 25 bloques
+            if abs(x - player.x) > radius or abs(y - player.y) > radius:
+                color = (80, 80, 80)
+            else:
                 if tile == 0:
                     color = (255, 255, 255)
                 elif tile == 1 or tile == -1:
                     color = (40, 40, 40)
-                elif tile == 10:
-                    color = (120, 200, 120)
-                elif tile == 11:
-                    color = (0, 200, 255)
-                elif tile == 12:
-                    color = (120, 120, 120)
-                elif tile == 13:
-                    color = (255, 150, 200)
                 else:
-                    color = (200, 200, 200)
-            else:
-                color = (80, 80, 80)
+                    color = (200, 200, 200)  # fallback seguro
 
             pygame.draw.rect(
                 screen,
                 color,
-                (view_x * CELL_SIZE, view_y * CELL_SIZE, CELL_SIZE, CELL_SIZE)
+                (x * CELL_SIZE, y * CELL_SIZE, CELL_SIZE, CELL_SIZE)
             )
+
+
+
+    # PLAYER
     pygame.draw.circle(
         screen,
         (0, 100, 255),
         (CELL_SIZE + CELL_SIZE // 2, CELL_SIZE + CELL_SIZE // 2),
         CELL_SIZE // 2
     )
-
+    
     pygame.display.flip()
 
 pygame.quit()
