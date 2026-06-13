@@ -84,7 +84,9 @@ def connect_to_server(event=None):
     for host in hosts_to_try:
         try:
             client = socket.socket()
+            client.settimeout(3)
             client.connect((host, PORT))
+            client.settimeout(None)
             HOST = host
             connected_ok = True
             ventana.after(0, append_chat, f"Conectado a servidor en {HOST}:{PORT}\n")
@@ -99,6 +101,10 @@ def connect_to_server(event=None):
 
     ventana.after(0, append_chat, f"No se pudo conectar con {hosts_to_try}: {last_error}\n")
     ventana.after(0, append_chat, "Introduce la IP del ordenador 1 y pulsa Conectar.\n")
+
+
+def connect_button_clicked(event=None):
+    threading.Thread(target=connect_to_server, args=(event,), daemon=True).start()
 
 
 def process_command(message, source="local"):
@@ -183,11 +189,12 @@ def launch_game(seed):
         ventana.after(0, append_chat, "No se encontró main2.py\n")
 
 
-connect_button.config(command=connect_to_server)
-server_ip_entry.bind("<Return>", connect_to_server)
+connect_button.config(command=connect_button_clicked)
+server_ip_entry.bind("<Return>", connect_button_clicked)
 
-# Intento de conexión automática con hosts conocidos
-connect_to_server()
+ventana.after(0, append_chat, "Introduce la IP del ordenador 1 y pulsa Conectar, o deja vacío para intentar los hosts automáticos.\n")
+# Intento de conexión automática con hosts conocidos en un hilo para no bloquear Tkinter
+threading.Thread(target=connect_to_server, daemon=True).start()
 
 # --------- ENVIAR MENSAJES ---------
 def enviar(event=None):
