@@ -1,6 +1,6 @@
 import pygame
 
-from maze_generator import generator, randomGap
+from maze_generator import generator, randomGap, addDecorations
 from maze_charactermov import Player
 from game import Game
 from sprites import Sprites
@@ -12,6 +12,8 @@ from sprites import Sprites
 n = 30
 maze = generator(n)
 maze = randomGap(maze, 10, n)
+maze = addDecorations(maze, 8)
+
 
 ROWS = len(maze)
 COLS = len(maze[0])
@@ -21,7 +23,7 @@ COLS = len(maze[0])
 # CONFIG
 # -------------------
 CELL_SIZE = 50
-VIEW_SIZE = 5   # tamaño de visión (5x5 recomendado)
+VIEW_SIZE = 5   # cámara 5x5
 
 WIDTH = VIEW_SIZE * CELL_SIZE
 HEIGHT = VIEW_SIZE * CELL_SIZE
@@ -43,11 +45,10 @@ pygame.init()
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 clock = pygame.time.Clock()
 
-
 sprites = Sprites(CELL_SIZE)
 
-running = True
 
+running = True
 
 
 # -------------------
@@ -56,48 +57,56 @@ running = True
 while running:
     clock.tick(10)
 
+    # -------------------
+    # EVENTS
+    # -------------------
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
 
         if event.type == pygame.KEYDOWN:
+
             if event.key == pygame.K_r:
                 game.reset()
 
             elif event.key == pygame.K_w:
                 player.move(0, -1, maze)
+
             elif event.key == pygame.K_s:
                 player.move(0, 1, maze)
+
             elif event.key == pygame.K_a:
                 player.move(-1, 0, maze)
+
             elif event.key == pygame.K_d:
                 player.move(1, 0, maze)
 
+            # recalcular IA
             game.recalculate()
 
 
     # -------------------
-    # WIN CHECK
+    # WIN CONDITION
     # -------------------
-    if player.x == goal[0] and player.y == goal[1]:
+    if (player.x, player.y) == goal:
         pygame.display.set_caption("¡HAS GANADO!")
 
 
     # -------------------
-    # BACKGROUND
+    # SCREEN
     # -------------------
     screen.fill((0, 0, 0))
 
 
     # -------------------
-    # CAMERA (vista centrada)
+    # CAMERA
     # -------------------
     start_x = player.x - VIEW_SIZE // 2
     start_y = player.y - VIEW_SIZE // 2
 
 
     # -------------------
-    # MAPA VISIBLE
+    # DRAW MAP
     # -------------------
     for y in range(start_y, start_y + VIEW_SIZE):
         for x in range(start_x, start_x + VIEW_SIZE):
@@ -115,12 +124,11 @@ while running:
                 else:
                     pygame.draw.rect(
                         screen,
-                        (200, 200, 200),
+                        (50, 50, 50),
                         (screen_x, screen_y, CELL_SIZE, CELL_SIZE)
                     )
 
             else:
-                # fuera del mapa
                 pygame.draw.rect(
                     screen,
                     (0, 0, 0),
@@ -129,7 +137,7 @@ while running:
 
 
     # -------------------
-    # PATH (IA)
+    # IA PATH (solo visible)
     # -------------------
     for x, y in game.closed:
         if start_x <= x < start_x + VIEW_SIZE and start_y <= y < start_y + VIEW_SIZE:
@@ -166,7 +174,7 @@ while running:
 
 
     # -------------------
-    # PLAYER (siempre centro)
+    # PLAYER (siempre centro pantalla)
     # -------------------
     pygame.draw.rect(
         screen,
