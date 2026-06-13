@@ -1,13 +1,14 @@
 import pygame
 
-from maze_generator import generator, randomGap, addDecorations
+from maze_generator import generator, randomGap
 from maze_charactermov import Player
 from game import Game
-
 from sprites import Sprites
 
 
-
+# -------------------
+# MAPA
+# -------------------
 n = 30
 maze = generator(n)
 maze = randomGap(maze, 10, n)
@@ -15,22 +16,43 @@ maze = randomGap(maze, 10, n)
 ROWS = len(maze)
 COLS = len(maze[0])
 
+
+# -------------------
+# CONFIG
+# -------------------
 CELL_SIZE = 50
-VIEW_SIZE = 3
+VIEW_SIZE = 5   # tamaño de visión (5x5 recomendado)
+
 WIDTH = VIEW_SIZE * CELL_SIZE
 HEIGHT = VIEW_SIZE * CELL_SIZE
 
+
+# -------------------
+# PLAYER + GAME
+# -------------------
 player = Player()
 goal = (COLS - 2, ROWS - 1)
 
 game = Game(maze, player, goal)
 
+
+# -------------------
+# PYGAME INIT
+# -------------------
 pygame.init()
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 clock = pygame.time.Clock()
 
+
+sprites = Sprites(CELL_SIZE)
+
 running = True
 
+
+
+# -------------------
+# LOOP
+# -------------------
 while running:
     clock.tick(10)
 
@@ -53,66 +75,112 @@ while running:
 
             game.recalculate()
 
+
+    # -------------------
+    # WIN CHECK
+    # -------------------
     if player.x == goal[0] and player.y == goal[1]:
         pygame.display.set_caption("¡HAS GANADO!")
 
+
+    # -------------------
+    # BACKGROUND
+    # -------------------
     screen.fill((0, 0, 0))
 
-    for y in range(ROWS):
-        for x in range(COLS):
-            tile = maze[y][x]
 
-            if tile == 0:
-                color = (255, 255, 255)
-            elif tile == 1:
-                color = (40, 40, 40)
-            elif tile == 10:
-                color = (120, 200, 120)
-            elif tile == 11:
-                color = (0, 200, 255)
-            elif tile == 12:
-                color = (120, 120, 120)
-            elif tile == 13:
-                color = (255, 150, 200)
+    # -------------------
+    # CAMERA (vista centrada)
+    # -------------------
+    start_x = player.x - VIEW_SIZE // 2
+    start_y = player.y - VIEW_SIZE // 2
+
+
+    # -------------------
+    # MAPA VISIBLE
+    # -------------------
+    for y in range(start_y, start_y + VIEW_SIZE):
+        for x in range(start_x, start_x + VIEW_SIZE):
+
+            screen_x = (x - start_x) * CELL_SIZE
+            screen_y = (y - start_y) * CELL_SIZE
+
+            if 0 <= x < COLS and 0 <= y < ROWS:
+
+                tile = maze[y][x]
+                img = sprites.get_tile(tile)
+
+                if img:
+                    screen.blit(img, (screen_x, screen_y))
+                else:
+                    pygame.draw.rect(
+                        screen,
+                        (200, 200, 200),
+                        (screen_x, screen_y, CELL_SIZE, CELL_SIZE)
+                    )
+
             else:
-                color = (200, 200, 200)  # fallback seguro
+                # fuera del mapa
+                pygame.draw.rect(
+                    screen,
+                    (0, 0, 0),
+                    (screen_x, screen_y, CELL_SIZE, CELL_SIZE)
+                )
 
-            screen.blit(
-                sprites.get_tile(tile),
-                (x * CELL_SIZE, y * CELL_SIZE)
+
+    # -------------------
+    # PATH (IA)
+    # -------------------
+    for x, y in game.closed:
+        if start_x <= x < start_x + VIEW_SIZE and start_y <= y < start_y + VIEW_SIZE:
+            pygame.draw.rect(
+                screen,
+                (255, 80, 80),
+                ((x - start_x) * CELL_SIZE,
+                 (y - start_y) * CELL_SIZE,
+                 CELL_SIZE,
+                 CELL_SIZE)
+            )
+
+    for x, y in game.path:
+        if start_x <= x < start_x + VIEW_SIZE and start_y <= y < start_y + VIEW_SIZE:
+            pygame.draw.rect(
+                screen,
+                (0, 255, 0),
+                ((x - start_x) * CELL_SIZE,
+                 (y - start_y) * CELL_SIZE,
+                 CELL_SIZE,
+                 CELL_SIZE)
             )
 
 
-    for x, y in game.closed:
-        pygame.draw.rect(
-            screen,
-            (255, 80, 80),
-            (x * CELL_SIZE, y * CELL_SIZE, CELL_SIZE, CELL_SIZE)
+    # -------------------
+    # GOAL
+    # -------------------
+    if start_x <= goal[0] < start_x + VIEW_SIZE and start_y <= goal[1] < start_y + VIEW_SIZE:
+        screen.blit(
+            sprites.goal,
+            ((goal[0] - start_x) * CELL_SIZE,
+             (goal[1] - start_y) * CELL_SIZE)
         )
 
 
-    for x, y in game.path:
-        pygame.draw.rect(
-            screen,
-            (0, 255, 0),
-            (x * CELL_SIZE, y * CELL_SIZE, CELL_SIZE, CELL_SIZE)
-        )
-
-
-        img = sprites.get_tile(tile)
-
-        if img:
-            screen.blit(img, (x * CELL_SIZE, y * CELL_SIZE))    
-        
-        
-
-    # PLAYER
+    # -------------------
+    # PLAYER (siempre centro)
+    # -------------------
     pygame.draw.rect(
         screen,
         (0, 100, 255),
-        (CELL_SIZE, CELL_SIZE, CELL_SIZE, CELL_SIZE)
+        (
+            (VIEW_SIZE // 2) * CELL_SIZE,
+            (VIEW_SIZE // 2) * CELL_SIZE,
+            CELL_SIZE,
+            CELL_SIZE
+        )
     )
 
+
     pygame.display.flip()
+
 
 pygame.quit()
