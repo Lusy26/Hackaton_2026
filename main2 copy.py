@@ -11,6 +11,8 @@ from sprites import Sprites
 n = 30
 maze = generator(n)
 maze = randomGap(maze, 10, n)
+maze = addDecorations(maze, 8)
+maze = addDecorations(maze, 8)
 
 
 
@@ -52,6 +54,21 @@ while running:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
+
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_r:
+                game.reset()
+
+            elif event.key == pygame.K_w:
+                player.move(0, -1, maze)
+            elif event.key == pygame.K_s:
+                player.move(0, 1, maze)
+            elif event.key == pygame.K_a:
+                player.move(-1, 0, maze)
+            elif event.key == pygame.K_d:
+                player.move(1, 0, maze)
+
+            game.recalculate()
 
         
      
