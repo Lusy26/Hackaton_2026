@@ -135,14 +135,14 @@ def randomGap(maze,n,size):
 
 import random
 
-DECORATIONS = [10, 11, 12, 13]
+DECORATIONS = [10, 11, 12, 13, 14, 15, 16]
 
 def addDecorations(maze, chance=5):
     for y in range(len(maze)):
         for x in range(len(maze[0])):
 
             if maze[y][x] == -1:
-                if random.randint(1,100) <= chance:
+                if random.randint(1, 100) <= chance:
                     maze[y][x] = random.choice(DECORATIONS)
 
     return maze

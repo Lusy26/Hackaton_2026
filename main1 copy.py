@@ -8,7 +8,7 @@ from sprites import Sprites
 
 
 
-n = 10
+n = 30
 maze = generator(n)
 maze = randomGap(maze, 10, n)
 maze = addDecorations(maze, 8)
@@ -109,10 +109,12 @@ while running:
         )
 
 
-    screen.blit(
-        sprites.goal,
-        (goal[0] * CELL_SIZE, goal[1] * CELL_SIZE)
-    )
+        img = sprites.get_tile(tile)
+
+        if img:
+            screen.blit(img, (x * CELL_SIZE, y * CELL_SIZE))    
+        
+        
 
     # PLAYER
     pygame.draw.rect(
