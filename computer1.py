@@ -1,4 +1,7 @@
+import os
 import socket
+import subprocess
+import sys
 import tkinter as tk
 from tkinter.scrolledtext import ScrolledText
 import threading
@@ -12,6 +15,7 @@ server.bind((HOST, PORT))
 server.listen(1)
 
 conn = None
+child_process = None
 
 # --------- VENTANA ---------
 ventana = tk.Tk()
@@ -57,4 +61,30 @@ entrada.bind("<Return>", enviar)
 boton = tk.Button(ventana, text="Enviar", command=enviar)
 boton.pack()
 
-ventana.mainloop()
+# --------- EJECUTAR main.py ---------
+if __name__ == "__main__":
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    main_path = os.path.join(script_dir, "main.py")
+
+    if os.path.exists(main_path):
+        try:
+            child_process = subprocess.Popen([sys.executable, main_path], cwd=script_dir)
+        except Exception as e:
+            chat.insert(tk.END, f"Error al ejecutar main.py: {e}\n")
+    else:
+        chat.insert(tk.END, "No se encontró main.py\n")
+
+    def on_close():
+        global child_process
+
+        if child_process and child_process.poll() is None:
+            child_process.terminate()
+            try:
+                child_process.wait(timeout=5)
+            except Exception:
+                pass
+
+        ventana.destroy()
+
+    ventana.protocol("WM_DELETE_WINDOW", on_close)
+    ventana.mainloop()
