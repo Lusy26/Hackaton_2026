@@ -1,4 +1,5 @@
 import random
+random.seed(12345)
 class Cell():
     def __init__(self,pos):
         self.wall={"up":1,
