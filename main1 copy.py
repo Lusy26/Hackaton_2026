@@ -11,34 +11,25 @@ from sprites import Sprites
 n = 30
 maze = generator(n)
 maze = randomGap(maze, 10, n)
-maze = addDecorations(maze, 8)
-
 
 ROWS = len(maze)
 COLS = len(maze[0])
 
-CELL_SIZE = 10
-
-WIDTH = COLS * CELL_SIZE
-HEIGHT = ROWS * CELL_SIZE
-
-
+CELL_SIZE = 50
+VIEW_SIZE = 3
+WIDTH = VIEW_SIZE * CELL_SIZE
+HEIGHT = VIEW_SIZE * CELL_SIZE
 
 player = Player()
 goal = (COLS - 2, ROWS - 1)
 
 game = Game(maze, player, goal)
 
-
-
 pygame.init()
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 clock = pygame.time.Clock()
 
-sprites = Sprites(CELL_SIZE)
-
 running = True
-
 
 while running:
     clock.tick(10)
@@ -50,6 +41,7 @@ while running:
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_r:
                 game.reset()
+
             elif event.key == pygame.K_w:
                 player.move(0, -1, maze)
             elif event.key == pygame.K_s:
@@ -61,10 +53,8 @@ while running:
 
             game.recalculate()
 
-
     if player.x == goal[0] and player.y == goal[1]:
         pygame.display.set_caption("¡HAS GANADO!")
-
 
     screen.fill((0, 0, 0))
 
@@ -120,7 +110,7 @@ while running:
     pygame.draw.rect(
         screen,
         (0, 100, 255),
-        (player.x * CELL_SIZE, player.y * CELL_SIZE, CELL_SIZE, CELL_SIZE)
+        (CELL_SIZE, CELL_SIZE, CELL_SIZE, CELL_SIZE)
     )
 
     pygame.display.flip()

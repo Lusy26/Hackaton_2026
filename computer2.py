@@ -1,4 +1,5 @@
 import os
+import queue
 import socket
 import subprocess
 import sys
@@ -32,12 +33,23 @@ entrada = tk.Entry(ventana, width=40)
 entrada.pack()
 
 # --------- RECIBIR MENSAJES ---------
+def append_chat(text):
+    chat.insert(tk.END, text)
+    chat.see(tk.END)
+
+
 def recibir():
     while True:
         try:
-            msg = client.recv(1024).decode()
-            chat.insert(tk.END, "Servidor: " + msg + "\n")
-        except:
+            msg = client.recv(1024)
+            if not msg:
+                ventana.after(0, append_chat, "Conexión cerrada por el servidor\n")
+                break
+
+            mensaje = msg.decode()
+            ventana.after(0, append_chat, "Servidor: " + mensaje + "\n")
+        except Exception as e:
+            ventana.after(0, append_chat, f"Error al recibir: {e}\n")
             break
 
 threading.Thread(target=recibir, daemon=True).start()
