@@ -163,18 +163,16 @@ threading.Thread(target=aceptar, daemon=True).start()
 def enviar(event=None):
     msg = entrada.get()
 
-    if conn:
-        try:
-            conn.send(msg.encode())
-        except Exception as e:
-            ventana.after(0, append_chat, f"Error al enviar: {e}\n")
-            return
-    else:
-        ventana.after(0, append_chat, "No hay conexión activa\n")
-        return
-
     if not process_command(msg, source="local"):
-        ventana.after(0, append_chat, "Tú: " + msg + "\n")
+        if conn:
+            try:
+                conn.send(msg.encode())
+            except Exception as e:
+                ventana.after(0, append_chat, f"Error al enviar: {e}\n")
+                return
+            ventana.after(0, append_chat, "Tú: " + msg + "\n")
+        else:
+            ventana.after(0, append_chat, "No hay conexión activa\n")
     entrada.delete(0, tk.END)
 
 entrada.bind("<Return>", enviar)
