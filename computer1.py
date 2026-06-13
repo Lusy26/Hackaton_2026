@@ -1,4 +1,5 @@
 import os
+import queue
 import socket
 import subprocess
 import sys
@@ -11,11 +12,13 @@ HOST = "0.0.0.0"
 PORT = 12345
 
 server = socket.socket()
+server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 server.bind((HOST, PORT))
 server.listen(1)
 
 conn = None
 child_process = None
+message_queue = queue.Queue()
 
 # --------- VENTANA ---------
 ventana = tk.Tk()
@@ -28,19 +31,27 @@ entrada = tk.Entry(ventana, width=40)
 entrada.pack()
 
 # --------- ESPERAR CLIENTE ---------
+def append_chat(text):
+    chat.insert(tk.END, text)
+    chat.see(tk.END)
+
+
 def aceptar():
     global conn
 
     conn, addr = server.accept()
-    chat.insert(tk.END, f"Clie5
+    ventana.after(0, append_chat, f"Cliente conectado: {addr}\n")
+
     while True:
         try:
-            data = conn.recv(1024).decode()
+            data = conn.recv(1024)
             if not data:
                 break
 
-            chat.insert(tk.END, "Cliente: " + data + "\n")
-        except:
+            mensaje = data.decode()
+            ventana.after(0, append_chat, "Cliente: " + mensaje + "\n")
+        except Exception as e:
+            ventana.after(0, append_chat, f"Error al recibir: {e}\n")
             break
 
 threading.Thread(target=aceptar, daemon=True).start()
@@ -50,9 +61,16 @@ def enviar(event=None):
     msg = entrada.get()
 
     if conn:
-        conn.send(msg.encode())
+        try:
+            conn.send(msg.encode())
+        except Exception as e:
+            ventana.after(0, append_chat, f"Error al enviar: {e}\n")
+            return
+    else:
+        ventana.after(0, append_chat, "No hay conexión activa\n")
+        return
 
-    chat.insert(tk.END, "Tú: " + msg + "\n")
+    ventana.after(0, append_chat, "Tú: " + msg + "\n")
     entrada.delete(0, tk.END)
 
 entrada.bind("<Return>", enviar)
@@ -63,15 +81,17 @@ boton.pack()
 # --------- EJECUTAR main.py ---------
 if __name__ == "__main__":
     script_dir = os.path.dirname(os.path.abspath(__file__))
-    main_path = os.path.join(script_dir, "main1.py")
+    main_path = os.path.join(script_dir, "main.py")
+    if not os.path.exists(main_path):
+        main_path = os.path.join(script_dir, "main1.py")
 
     if os.path.exists(main_path):
         try:
             child_process = subprocess.Popen([sys.executable, main_path], cwd=script_dir)
         except Exception as e:
-            chat.insert(tk.END, f"Error al ejecutar main1.py: {e}\n")
+            chat.insert(tk.END, f"Error al ejecutar {os.path.basename(main_path)}: {e}\n")
     else:
-        chat.insert(tk.END, "No se encontró main1.py\n")
+        chat.insert(tk.END, "No se encontró main.py ni main1.py\n")
 
     def on_close():
         global child_process
