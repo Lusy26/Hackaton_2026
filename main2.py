@@ -1,10 +1,14 @@
 import pygame
+import sys
 
-from maze_generator import generator, randomGap, addDecorations
+from maze_generator import generator, randomGap, addDecorations, set_seed
 from maze_charactermov import Player
 from game import Game
 
-
+if len(sys.argv) > 1:
+    seed_value = sys.argv[1]
+    set_seed(seed_value)
+    print(f"Usando seed: {seed_value}")
 
 
 n = 30

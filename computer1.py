@@ -19,6 +19,10 @@ server.listen(1)
 conn = None
 child_process = None
 message_queue = queue.Queue()
+script_dir = os.path.dirname(os.path.abspath(__file__))
+main_path = os.path.join(script_dir, "main.py")
+if not os.path.exists(main_path):
+    main_path = os.path.join(script_dir, "main1.py")
 
 # --------- VENTANA ---------
 ventana = tk.Tk()
@@ -36,6 +40,44 @@ def append_chat(text):
     chat.see(tk.END)
 
 
+def launch_game(seed):
+    global child_process
+    if child_process and child_process.poll() is None:
+        ventana.after(0, append_chat, "El juego ya se está ejecutando\n")
+        return
+
+    if os.path.exists(main_path):
+        try:
+            child_process = subprocess.Popen([sys.executable, main_path, str(seed)], cwd=script_dir)
+            ventana.after(0, append_chat, f"Juego iniciado con seed: {seed}\n")
+        except Exception as e:
+            ventana.after(0, append_chat, f"Error al ejecutar {os.path.basename(main_path)}: {e}\n")
+    else:
+        ventana.after(0, append_chat, "No se encontró main.py ni main1.py\n")
+
+
+def ask_seed_for_game():
+    seed_win = tk.Toplevel(ventana)
+    seed_win.title("Seed para laberinto")
+
+    tk.Label(seed_win, text="Ingrese seed:").pack(padx=10, pady=5)
+    seed_entry = tk.Entry(seed_win)
+    seed_entry.pack(padx=10, pady=5)
+    seed_entry.focus_set()
+
+    def on_ok(event=None):
+        seed_value = seed_entry.get().strip()
+        if seed_value == "":
+            seed_value = "0"
+        seed_win.destroy()
+        launch_game(seed_value)
+
+    tk.Button(seed_win, text="Iniciar juego", command=on_ok).pack(padx=10, pady=10)
+    seed_win.bind("<Return>", on_ok)
+    seed_win.transient(ventana)
+    seed_win.grab_set()
+
+
 def aceptar():
     global conn
 
@@ -43,6 +85,8 @@ def aceptar():
     try:
         conn, addr = server.accept()
         ventana.after(0, append_chat, f"Cliente conectado: {addr}\n")
+        ventana.after(0, append_chat, "Ingrese el seed para generar el laberinto.\n")
+        ventana.after(0, ask_seed_for_game)
     except Exception as e:
         ventana.after(0, append_chat, f"Error al aceptar conexión: {e}\n")
         return
@@ -84,21 +128,8 @@ entrada.bind("<Return>", enviar)
 boton = tk.Button(ventana, text="Enviar", command=enviar)
 boton.pack()
 
-# --------- EJECUTAR main.py ---------
+# --------- EJECUTAR LA VENTANA ---------
 if __name__ == "__main__":
-    script_dir = os.path.dirname(os.path.abspath(__file__))
-    main_path = os.path.join(script_dir, "main.py")
-    if not os.path.exists(main_path):
-        main_path = os.path.join(script_dir, "main1.py")
-
-    if os.path.exists(main_path):
-        try:
-            child_process = subprocess.Popen([sys.executable, main_path], cwd=script_dir)
-        except Exception as e:
-            chat.insert(tk.END, f"Error al ejecutar {os.path.basename(main_path)}: {e}\n")
-    else:
-        chat.insert(tk.END, "No se encontró main.py ni main1.py\n")
-
     def on_close():
         global child_process
 

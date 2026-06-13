@@ -1,5 +1,7 @@
 import random
-random.seed(12345)
+def set_seed(seed):
+    random.seed(seed)
+
 
 
 
